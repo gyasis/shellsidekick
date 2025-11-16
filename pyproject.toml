@@ -1,0 +1,43 @@
+[project]
+name = "shellsidekick"
+version = "0.1.0"
+description = "AI-powered terminal session monitoring via MCP"
+requires-python = ">=3.11"
+dependencies = [
+    "fastmcp>=0.5.0",
+]
+
+[project.scripts]
+shellsidekick = "shellsidekick.mcp.server:main"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "pytest-cov>=7.0.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W"]
+ignore = ["E402"]  # Allow imports after code for intentional initialization order
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
