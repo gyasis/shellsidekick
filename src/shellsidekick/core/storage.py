@@ -2,9 +2,10 @@
 
 import json
 import os
+import re
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 
 # Base storage directory
@@ -147,3 +148,126 @@ def cleanup_old_files(retention_days: int = 7, dry_run: bool = False) -> tuple[L
                     os.remove(file_path)
 
     return deleted_files, bytes_freed
+
+
+def search_log_file(
+    log_file: str,
+    query: str,
+    context_lines: int = 0,
+    max_results: int = 10
+) -> List[Dict[str, Any]]:
+    """Search a log file for matching lines with context.
+
+    Args:
+        log_file: Path to log file to search
+        query: Search query (supports regex)
+        context_lines: Number of context lines before/after match
+        max_results: Maximum number of results to return
+
+    Returns:
+        List of match dictionaries with:
+        - matched_text: The matching line
+        - line_number: Line number (1-indexed)
+        - context_before: List of context lines before match
+        - context_after: List of context lines after match
+
+    Raises:
+        re.error: If query is invalid regex pattern
+    """
+    # Compile regex pattern (raises re.error if invalid)
+    pattern = re.compile(query)
+
+    results = []
+    lines = []
+
+    # Read all lines from file
+    with open(log_file, 'r') as f:
+        lines = f.readlines()
+
+    # Strip newlines
+    lines = [line.rstrip('\n') for line in lines]
+
+    # Search for matches
+    for i, line in enumerate(lines):
+        if pattern.search(line):
+            # Extract context
+            start_idx = max(0, i - context_lines)
+            end_idx = min(len(lines), i + context_lines + 1)
+
+            context_before = lines[start_idx:i]
+            context_after = lines[i + 1:end_idx]
+
+            # Create match result
+            match = {
+                "matched_text": line,
+                "line_number": i + 1,  # 1-indexed
+                "context_before": context_before,
+                "context_after": context_after
+            }
+
+            results.append(match)
+
+            # Check max results limit
+            if len(results) >= max_results:
+                break
+
+    return results
+
+
+def cleanup_old_sessions(
+    sessions_dir: str,
+    retention_days: int = 7,
+    dry_run: bool = False
+) -> Dict[str, Any]:
+    """Clean up session files older than retention period.
+
+    Args:
+        sessions_dir: Directory containing session files
+        retention_days: Delete files older than this many days
+        dry_run: If True, don't actually delete files
+
+    Returns:
+        Dictionary with:
+        - deleted_sessions: List of deleted file names
+        - total_deleted: Total number of files deleted
+        - bytes_freed: Total bytes freed
+        - dry_run: Whether this was a dry run
+    """
+    import time
+
+    # Calculate cutoff time
+    cutoff_time = time.time() - (retention_days * 24 * 60 * 60)
+
+    deleted_sessions = []
+    bytes_freed = 0
+
+    # Scan directory for files
+    sessions_path = Path(sessions_dir)
+    if not sessions_path.exists():
+        return {
+            "deleted_sessions": [],
+            "total_deleted": 0,
+            "bytes_freed": 0,
+            "dry_run": dry_run
+        }
+
+    for file_path in sessions_path.iterdir():
+        if file_path.is_file():
+            # Check if file is older than cutoff
+            file_mtime = os.path.getmtime(file_path)
+
+            # Only delete if STRICTLY older (not equal)
+            if file_mtime < cutoff_time:
+                file_size = os.path.getsize(file_path)
+                deleted_sessions.append(file_path.name)
+                bytes_freed += file_size
+
+                if not dry_run:
+                    os.remove(file_path)
+
+    return {
+        "deleted_sessions": deleted_sessions,
+        "total_deleted": len(deleted_sessions),
+        "bytes_freed": bytes_freed,
+        "dry_run": dry_run
+    }

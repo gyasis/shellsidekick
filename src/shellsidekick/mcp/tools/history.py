@@ -129,3 +129,161 @@ def get_learned_patterns(
     )
 
     return result
+
+
+@mcp.tool()
+def search_session_history(
+    query: str,
+    session_id: Optional[str] = None,
+    context_lines: int = 3,
+    max_results: int = 10
+) -> dict:
+    """Search session history for specific patterns or keywords.
+
+    Searches through session log files for matching patterns using regex support.
+    Useful for debugging issues, finding error messages, or analyzing session behavior.
+
+    Args:
+        query: Search query (supports regex patterns)
+        session_id: Session ID to search (None for all sessions)
+        context_lines: Lines of context before/after match (0-10, default: 3)
+        max_results: Maximum number of results to return (1-100, default: 10)
+
+    Returns:
+        Dictionary with:
+        - matches: Array of match objects with matched_text, line_number, context
+        - total_matches: Total number of matches found
+        - searched_sessions: List of session IDs that were searched
+
+    Raises:
+        ToolError: If session not found, invalid regex, or invalid parameters
+    """
+    from shellsidekick.core.storage import search_log_file
+    from shellsidekick.mcp.session_state import active_sessions
+    import re
+
+    # Validate parameters
+    if context_lines < 0 or context_lines > 10:
+        raise ToolError(
+            "context_lines must be between 0 and 10",
+            code="INVALID_CONTEXT_LINES"
+        )
+
+    if max_results < 1 or max_results > 100:
+        raise ToolError(
+            "max_results must be between 1 and 100",
+            code="INVALID_MAX_RESULTS"
+        )
+
+    # Validate regex pattern
+    try:
+        re.compile(query)
+    except re.error as e:
+        raise ToolError(
+            f"Invalid regex pattern: {str(e)}",
+            code="INVALID_REGEX"
+        )
+
+    # Determine which sessions to search
+    if session_id:
+        # Search specific session
+        if session_id not in active_sessions:
+            raise ToolError(
+                f"Session {session_id} not found",
+                code="SESSION_NOT_FOUND"
+            )
+
+        sessions_to_search = {session_id: active_sessions[session_id]}
+    else:
+        # Search all active sessions
+        sessions_to_search = active_sessions
+
+    # Search each session
+    all_matches = []
+    searched_sessions = []
+
+    for sid, monitor in sessions_to_search.items():
+        try:
+            matches = search_log_file(
+                log_file=monitor.session.log_file,
+                query=query,
+                context_lines=context_lines,
+                max_results=max_results
+            )
+
+            # Add session_id to each match
+            for match in matches:
+                match["session_id"] = sid
+
+            all_matches.extend(matches)
+            searched_sessions.append(sid)
+
+            # Check if we've hit max_results
+            if len(all_matches) >= max_results:
+                all_matches = all_matches[:max_results]
+                break
+
+        except Exception as e:
+            logger.warning(f"Failed to search session {sid}: {str(e)}")
+            continue
+
+    logger.info(
+        f"Searched {len(searched_sessions)} sessions for '{query}', "
+        f"found {len(all_matches)} matches"
+    )
+
+    return {
+        "matches": all_matches,
+        "total_matches": len(all_matches),
+        "searched_sessions": searched_sessions
+    }
+
+
+@mcp.tool()
+def cleanup_old_sessions(
+    retention_days: int = 7,
+    dry_run: bool = False
+) -> dict:
+    """Clean up expired session data based on retention policy.
+
+    Removes session log files older than the retention period to free disk space
+    and maintain privacy. Useful for regular maintenance and compliance with
+    data retention policies.
+
+    Args:
+        retention_days: Delete sessions older than N days (1-365, default: 7)
+        dry_run: Show what would be deleted without actually deleting (default: False)
+
+    Returns:
+        Dictionary with:
+        - deleted_sessions: List of deleted session file names
+        - total_deleted: Total number of sessions deleted
+        - bytes_freed: Total disk space freed in bytes
+        - dry_run: Whether this was a dry run
+
+    Raises:
+        ToolError: If retention_days is out of range
+    """
+    from shellsidekick.core.storage import cleanup_old_sessions as cleanup_func, STORAGE_DIR
+
+    # Validate retention_days
+    if retention_days < 1 or retention_days > 365:
+        raise ToolError(
+            "retention_days must be between 1 and 365",
+            code="INVALID_RETENTION_DAYS"
+        )
+
+    # Run cleanup
+    result = cleanup_func(
+        sessions_dir=str(STORAGE_DIR),
+        retention_days=retention_days,
+        dry_run=dry_run
+    )
+
+    action = "Would delete" if dry_run else "Deleted"
+    logger.info(
+        f"{action} {result['total_deleted']} sessions "
+        f"({result['bytes_freed']} bytes freed, retention={retention_days} days)"
+    )
+
+    return result

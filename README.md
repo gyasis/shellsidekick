@@ -4,13 +4,15 @@
 
 ShellSidekick is a Model Context Protocol (MCP) server that enables AI assistants to monitor terminal sessions in real-time, detect prompts waiting for input, and provide intelligent suggestions.
 
-## 🎯 Status: Phase 5 Complete (Pattern Learning)
+## 🎯 Status: Phase 6 Complete (History Search & Cleanup)
 
 ✅ **Real-time session monitoring** - Monitor SSH sessions and terminal output
 ✅ **Intelligent prompt detection** - Detect passwords, confirmations, file paths
 ✅ **Context-aware suggestions** - Suggest appropriate inputs with safety warnings
 ✅ **Pattern learning** - Learn from user behavior, improve suggestions over time
 ✅ **Persistent storage** - Patterns survive server restarts
+✅ **Session history search** - Search logs with regex for debugging
+✅ **Automatic cleanup** - Remove old session data per retention policy
 ✅ **Fast detection** - <500ms latency, >10k lines/second throughput
 ✅ **Secure by default** - Password redaction, dangerous command detection
 
@@ -25,9 +27,11 @@ ShellSidekick is a Model Context Protocol (MCP) server that enables AI assistant
 - **Persistent Patterns**: Patterns saved to JSON, survive server restarts
 - **High Performance**: <500ms detection latency, process >10,000 lines/second
 - **Security**: Password redaction, dangerous operation detection, secure file permissions
-- **MCP Integration**: 7 MCP tools for session management, detection, suggestions, and pattern learning
+- **MCP Integration**: 9 MCP tools for session management, detection, suggestions, pattern learning, and history search
 
 ## Quick Start
+
+See **[QUICKSTART.md](QUICKSTART.md)** for detailed step-by-step guide with real-world examples!
 
 ```bash
 # Install dependencies
@@ -36,8 +40,11 @@ uv sync
 # Run tests
 uv run pytest -v
 
-# Start MCP server
-uv run python src/shellsidekick/mcp/server.py
+# Install MCP server to Claude
+uv run fastmcp install src/shellsidekick/mcp/server.py
+
+# Start MCP server (development mode)
+uv run fastmcp dev src/shellsidekick/mcp/server.py --reload
 ```
 
 ## MCP Tools
@@ -54,6 +61,10 @@ uv run python src/shellsidekick/mcp/server.py
 ### Pattern Learning
 6. **`track_input_event`** - Record user input to learn patterns
 7. **`get_learned_patterns`** - Retrieve learned patterns with filtering
+
+### History & Search
+8. **`search_session_history`** - Search session logs with regex (find errors, patterns)
+9. **`cleanup_old_sessions`** - Clean up old session data (7-day retention, dry-run mode)
 
 ## Documentation
 
