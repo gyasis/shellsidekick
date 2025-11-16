@@ -3,10 +3,8 @@
 import json
 import os
 import re
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-
+from typing import Any, Dict, List
 
 # Base storage directory
 STORAGE_DIR = Path("/tmp/ssk-sessions")
@@ -29,7 +27,7 @@ def save_json(file_path: Path, data: Dict[str, Any]) -> None:
     """
     file_path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
 
-    with open(file_path, 'w') as f:
+    with open(file_path, "w") as f:
         json.dump(data, f, indent=2, default=str)
 
     # Set secure permissions (user-only read/write)
@@ -48,7 +46,7 @@ def load_json(file_path: Path) -> Dict[str, Any]:
     if not file_path.exists():
         return {}
 
-    with open(file_path, 'r') as f:
+    with open(file_path, "r") as f:
         return json.load(f)
 
 
@@ -72,10 +70,7 @@ def save_session_history(session_id: str, events: List[Dict[str, Any]]) -> None:
         events: List of input events
     """
     history_path = get_session_history_path(session_id)
-    data = {
-        "session_id": session_id,
-        "events": events
-    }
+    data = {"session_id": session_id, "events": events}
     save_json(history_path, data)
 
 
@@ -151,10 +146,7 @@ def cleanup_old_files(retention_days: int = 7, dry_run: bool = False) -> tuple[L
 
 
 def search_log_file(
-    log_file: str,
-    query: str,
-    context_lines: int = 0,
-    max_results: int = 10
+    log_file: str, query: str, context_lines: int = 0, max_results: int = 10
 ) -> List[Dict[str, Any]]:
     """Search a log file for matching lines with context.
 
@@ -181,11 +173,11 @@ def search_log_file(
     lines = []
 
     # Read all lines from file
-    with open(log_file, 'r') as f:
+    with open(log_file, "r") as f:
         lines = f.readlines()
 
     # Strip newlines
-    lines = [line.rstrip('\n') for line in lines]
+    lines = [line.rstrip("\n") for line in lines]
 
     # Search for matches
     for i, line in enumerate(lines):
@@ -195,14 +187,14 @@ def search_log_file(
             end_idx = min(len(lines), i + context_lines + 1)
 
             context_before = lines[start_idx:i]
-            context_after = lines[i + 1:end_idx]
+            context_after = lines[i + 1 : end_idx]
 
             # Create match result
             match = {
                 "matched_text": line,
                 "line_number": i + 1,  # 1-indexed
                 "context_before": context_before,
-                "context_after": context_after
+                "context_after": context_after,
             }
 
             results.append(match)
@@ -215,9 +207,7 @@ def search_log_file(
 
 
 def cleanup_old_sessions(
-    sessions_dir: str,
-    retention_days: int = 7,
-    dry_run: bool = False
+    sessions_dir: str, retention_days: int = 7, dry_run: bool = False
 ) -> Dict[str, Any]:
     """Clean up session files older than retention period.
 
@@ -244,12 +234,7 @@ def cleanup_old_sessions(
     # Scan directory for files
     sessions_path = Path(sessions_dir)
     if not sessions_path.exists():
-        return {
-            "deleted_sessions": [],
-            "total_deleted": 0,
-            "bytes_freed": 0,
-            "dry_run": dry_run
-        }
+        return {"deleted_sessions": [], "total_deleted": 0, "bytes_freed": 0, "dry_run": dry_run}
 
     for file_path in sessions_path.iterdir():
         if file_path.is_file():
@@ -269,5 +254,5 @@ def cleanup_old_sessions(
         "deleted_sessions": deleted_sessions,
         "total_deleted": len(deleted_sessions),
         "bytes_freed": bytes_freed,
-        "dry_run": dry_run
+        "dry_run": dry_run,
     }

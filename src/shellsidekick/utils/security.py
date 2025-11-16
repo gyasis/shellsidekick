@@ -3,7 +3,6 @@
 import re
 from typing import List
 
-
 # Password detection patterns
 PASSWORD_PATTERNS = [
     re.compile(r"password\s*:", re.IGNORECASE),
@@ -74,10 +73,7 @@ def redact_password(text: str) -> str:
     """
     # Replace password input text (anything after password: prompt)
     return re.sub(
-        r"(password|passphrase|pass)\s*:\s*\S+",
-        r"\1: [REDACTED]",
-        text,
-        flags=re.IGNORECASE
+        r"(password|passphrase|pass)\s*:\s*\S+", r"\1: [REDACTED]", text, flags=re.IGNORECASE
     )
 
 

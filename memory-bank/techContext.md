@@ -396,6 +396,44 @@ get_learned_patterns(min_occurrences=3)  # ignore patterns with <3 instances
 get_learned_patterns(prompt_filter="restart")  # only restart-related patterns
 ```
 
+## MCP Tools
+
+### Phase 1: 11 Tools (Production Ready)
+
+**Session Management (3 tools)**:
+1. `start_session_monitor` - Start monitoring a terminal session
+2. `get_session_updates` - Get new content since last check
+3. `stop_session_monitor` - Stop monitoring and cleanup
+
+**Detection & Inference (2 tools)**:
+4. `detect_input_prompt` - Detect if terminal is waiting for input
+5. `infer_expected_input` - Suggest appropriate inputs based on context
+
+**Pattern Learning (2 tools)**:
+6. `track_input_event` - Record user input for pattern learning
+7. `get_learned_patterns` - Retrieve learned patterns with filtering
+
+**History & Search (4 tools)**:
+8. `search_session_history` - Search session logs with regex and context lines
+9. `cleanup_old_sessions` - Manual cleanup with dry-run preview
+10. `get_session_list` - List all active sessions
+11. `get_session_status` - Get detailed session status
+
+### Phase 2: Planned Tools (Not Implemented)
+
+**Smart Catch-Up (1 primary tool)**:
+- `smart_catchup` - Get intelligent summary of events since last check-in
+  - Filters by severity (LOW/MEDIUM/HIGH/CRITICAL)
+  - Returns events with smart context
+  - Deduplicates content
+  - Provides summary statistics
+
+**Enhanced Detection (1 tool)**:
+- `detect_events` - Enhanced version of detect_input_prompt
+  - Detects all event types (prompts, errors, warnings, critical)
+  - Returns events with severity
+  - Includes event-specific context
+
 ## Common Development Tasks
 
 ### Adding a New Prompt Type
@@ -414,6 +452,7 @@ get_learned_patterns(prompt_filter="restart")  # only restart-related patterns
 4. Raise `ToolError` for errors
 5. Write contract tests in `tests/contract/`
 6. Update tool documentation
+7. Update memory-bank documentation
 
 ### Debugging MCP Server
 
@@ -442,6 +481,92 @@ print(result)
 ```
 
 Or visit: https://github.com/jlowin/fastmcp
+
+## Phase 2 Architecture (Planned)
+
+### New Components
+
+**Data Models** (`src/shellsidekick/models/`):
+- `event.py` - Event, EventType, Severity enums and dataclass
+
+**Core Logic** (`src/shellsidekick/core/`):
+- `event_detector.py` - Multi-pattern event detection (errors, warnings, critical)
+- `context_extractor.py` - Smart context extraction (event-specific boundaries)
+- `deduplicator.py` - Hash-based content deduplication
+- `timeline.py` - Event timeline for catch-up queries
+
+**MCP Tools** (`src/shellsidekick/mcp/tools/`):
+- `catchup.py` - smart_catchup tool (primary interface)
+- `detection.py` (modified) - Enhanced event detection
+
+### Event Model
+
+```python
+class EventType(Enum):
+    PROMPT = "prompt"           # User input needed
+    ERROR = "error"             # Execution error
+    WARNING = "warning"         # Non-fatal warning
+    CRITICAL = "critical"       # Critical failure
+    STATUS_CHANGE = "status"    # State transition
+
+class Severity(Enum):
+    LOW = 1       # Info, debug
+    MEDIUM = 2    # Warnings, notices
+    HIGH = 3      # Errors, prompts
+    CRITICAL = 4  # Fatal errors, crashes
+
+@dataclass
+class Event:
+    event_id: str                # UUID
+    event_type: EventType
+    severity: Severity
+    timestamp: datetime
+    file_position: int
+    content: str                 # Matched text
+    context: list[str]           # Smart context
+    matched_pattern: str
+    metadata: dict
+```
+
+### Pattern Catalog (26+ patterns)
+
+**Error Patterns (12)**:
+- `error:`, `exception:`, `failed:`, `failure:`, `traceback`
+- `command not found`, `permission denied`, `access denied`
+- `cannot`, `unable to`, `invalid`, `not found:`
+
+**Warning Patterns (8)**:
+- `warning:`, `warn:`, `deprecated`, `notice:`
+- `caution:`, `attention:`, `skipping`, `retrying`
+
+**Critical Patterns (6)**:
+- `critical:`, `fatal:`, `panic:`, `segmentation fault`
+- `core dumped`, `out of memory`
+
+### Smart Context Strategies
+
+**Error Context** (COMMAND_BLOCK):
+- Find last command (backwards search for `$` or `#`)
+- Include error message
+- Include stack trace (until blank line)
+
+**Prompt Context** (FIXED_LINES):
+- Include last 10 lines or until previous prompt
+
+**Warning Context** (TIME_WINDOW):
+- Include last 60 seconds of logs
+
+### Deduplication Strategy
+
+**Hash-Based Tracking**:
+- SHA-256 truncated to 16 chars
+- Collision rate < 0.001%
+- Force-include important events (bypass dedup)
+
+**Content Chunking**:
+- Split content into logical chunks
+- Track sent hashes in memory
+- Filter out previously-sent chunks
 
 ## Known Issues and Workarounds
 

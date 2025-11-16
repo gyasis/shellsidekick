@@ -6,12 +6,13 @@ from datetime import datetime
 from typing import Optional
 
 from shellsidekick.models.prompt import PromptDetection, PromptType
-from shellsidekick.utils.security import is_dangerous_operation, is_password_prompt
+from shellsidekick.utils.security import is_dangerous_operation
 
 
 @dataclass
 class PromptPattern:
     """A prompt detection pattern."""
+
     regex: re.Pattern
     prompt_type: PromptType
     confidence: float  # Base confidence (0.0-1.0)
@@ -23,62 +24,59 @@ PROMPT_PATTERNS = [
     PromptPattern(
         regex=re.compile(r"password\s*:", re.IGNORECASE),
         prompt_type=PromptType.PASSWORD,
-        confidence=0.95
+        confidence=0.95,
     ),
     PromptPattern(
         regex=re.compile(r"passphrase\s*:", re.IGNORECASE),
         prompt_type=PromptType.PASSWORD,
-        confidence=0.95
+        confidence=0.95,
     ),
     PromptPattern(
         regex=re.compile(r"enter\s+(?:your\s+)?password", re.IGNORECASE),
         prompt_type=PromptType.PASSWORD,
-        confidence=0.92
+        confidence=0.92,
     ),
-
     # Yes/No prompts
     PromptPattern(
         regex=re.compile(r"\(yes/no\)|\[y/n\]|\(y/n\)", re.IGNORECASE),
         prompt_type=PromptType.YES_NO,
-        confidence=0.90
+        confidence=0.90,
     ),
     PromptPattern(
         regex=re.compile(r"continue\?|proceed\?|confirm\?", re.IGNORECASE),
         prompt_type=PromptType.YES_NO,
-        confidence=0.85
+        confidence=0.85,
     ),
-
     # Path prompts
     PromptPattern(
-        regex=re.compile(r"enter\s+(?:file\s+)?path\s*:|(?:file|directory)\s+path\s*:", re.IGNORECASE),
+        regex=re.compile(
+            r"enter\s+(?:file\s+)?path\s*:|(?:file|directory)\s+path\s*:", re.IGNORECASE
+        ),
         prompt_type=PromptType.PATH,
-        confidence=0.88
+        confidence=0.88,
     ),
     PromptPattern(
         regex=re.compile(r"(?:file|directory)\s+name\s*:", re.IGNORECASE),
         prompt_type=PromptType.PATH,
-        confidence=0.82
+        confidence=0.82,
     ),
-
     # Choice prompts (numbered lists)
     PromptPattern(
         regex=re.compile(r"^\s*\[\d+\].*(?:\n\s*\[\d+\].*)+", re.MULTILINE),
         prompt_type=PromptType.CHOICE,
-        confidence=0.82
+        confidence=0.82,
     ),
-
     # Command prompts
     PromptPattern(
         regex=re.compile(r"enter\s+command\s*:|command\s*:", re.IGNORECASE),
         prompt_type=PromptType.COMMAND,
-        confidence=0.85
+        confidence=0.85,
     ),
-
     # Generic text input
     PromptPattern(
         regex=re.compile(r"enter\s+\w+\s*:|input\s*:", re.IGNORECASE),
         prompt_type=PromptType.TEXT,
-        confidence=0.75
+        confidence=0.75,
     ),
 ]
 
@@ -108,8 +106,8 @@ class PromptDetector:
             return None
 
         # Focus on last 50 lines (prompts typically appear at end)
-        lines = content.split('\n')
-        recent_lines = '\n'.join(lines[-50:])
+        lines = content.split("\n")
+        recent_lines = "\n".join(lines[-50:])
 
         # Try each pattern in order
         for pattern in PROMPT_PATTERNS:
@@ -127,16 +125,13 @@ class PromptDetector:
                     matched_pattern=pattern.regex.pattern,
                     file_position=file_position,
                     timestamp=datetime.now(),
-                    is_dangerous=is_dangerous
+                    is_dangerous=is_dangerous,
                 )
 
         return None
 
     def detect_with_context(
-        self,
-        content: str,
-        file_position: int = 0,
-        context_lines: int = 3
+        self, content: str, file_position: int = 0, context_lines: int = 3
     ) -> Optional[tuple[PromptDetection, list[str]]]:
         """Detect prompt with surrounding context lines.
 
@@ -153,7 +148,7 @@ class PromptDetector:
             return None
 
         # Extract context
-        lines = content.split('\n')
+        lines = content.split("\n")
         # Find the line with the prompt
         prompt_line_idx = None
         for idx, line in enumerate(lines):
@@ -166,6 +161,6 @@ class PromptDetector:
             end_idx = min(len(lines), prompt_line_idx + context_lines + 1)
             context = lines[start_idx:end_idx]
         else:
-            context = lines[-context_lines-1:]
+            context = lines[-context_lines - 1 :]
 
         return detection, context

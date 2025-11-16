@@ -1,6 +1,6 @@
 """MCP tools for pattern learning and history management."""
 
-from typing import Optional, Dict
+from typing import Optional
 
 from fastmcp.exceptions import ToolError
 
@@ -19,7 +19,7 @@ def track_input_event(
     input_text: str,
     success: bool,
     input_source: str,
-    response_time_ms: int
+    response_time_ms: int,
 ) -> dict:
     """Track a user input event for pattern learning.
 
@@ -50,7 +50,7 @@ def track_input_event(
         raise ToolError(
             f"Invalid input_source: {input_source}. Must be one of: "
             f"{', '.join([s.value for s in InputSource])}",
-            code="INVALID_INPUT_SOURCE"
+            code="INVALID_INPUT_SOURCE",
         )
 
     # Track the event
@@ -60,7 +60,7 @@ def track_input_event(
         input_text=input_text,
         success=success,
         input_source=source,
-        response_time_ms=response_time_ms
+        response_time_ms=response_time_ms,
     )
 
     logger.info(
@@ -73,9 +73,7 @@ def track_input_event(
 
 @mcp.tool()
 def get_learned_patterns(
-    prompt_filter: Optional[str] = None,
-    min_occurrences: int = 1,
-    sort_by: str = "occurrences"
+    prompt_filter: Optional[str] = None, min_occurrences: int = 1, sort_by: str = "occurrences"
 ) -> dict:
     """Retrieve learned prompt-response patterns.
 
@@ -106,21 +104,16 @@ def get_learned_patterns(
     if sort_by not in valid_sort_fields:
         raise ToolError(
             f"Invalid sort_by: {sort_by}. Must be one of: {', '.join(valid_sort_fields)}",
-            code="INVALID_SORT_FIELD"
+            code="INVALID_SORT_FIELD",
         )
 
     # Validate min_occurrences
     if min_occurrences < 1:
-        raise ToolError(
-            "min_occurrences must be at least 1",
-            code="INVALID_MIN_OCCURRENCES"
-        )
+        raise ToolError("min_occurrences must be at least 1", code="INVALID_MIN_OCCURRENCES")
 
     # Get formatted patterns
     result = pattern_learner.get_patterns_formatted(
-        prompt_filter=prompt_filter,
-        min_occurrences=min_occurrences,
-        sort_by=sort_by
+        prompt_filter=prompt_filter, min_occurrences=min_occurrences, sort_by=sort_by
     )
 
     logger.info(
@@ -133,10 +126,7 @@ def get_learned_patterns(
 
 @mcp.tool()
 def search_session_history(
-    query: str,
-    session_id: Optional[str] = None,
-    context_lines: int = 3,
-    max_results: int = 10
+    query: str, session_id: Optional[str] = None, context_lines: int = 3, max_results: int = 10
 ) -> dict:
     """Search session history for specific patterns or keywords.
 
@@ -158,40 +148,29 @@ def search_session_history(
     Raises:
         ToolError: If session not found, invalid regex, or invalid parameters
     """
+    import re
+
     from shellsidekick.core.storage import search_log_file
     from shellsidekick.mcp.session_state import active_sessions
-    import re
 
     # Validate parameters
     if context_lines < 0 or context_lines > 10:
-        raise ToolError(
-            "context_lines must be between 0 and 10",
-            code="INVALID_CONTEXT_LINES"
-        )
+        raise ToolError("context_lines must be between 0 and 10", code="INVALID_CONTEXT_LINES")
 
     if max_results < 1 or max_results > 100:
-        raise ToolError(
-            "max_results must be between 1 and 100",
-            code="INVALID_MAX_RESULTS"
-        )
+        raise ToolError("max_results must be between 1 and 100", code="INVALID_MAX_RESULTS")
 
     # Validate regex pattern
     try:
         re.compile(query)
     except re.error as e:
-        raise ToolError(
-            f"Invalid regex pattern: {str(e)}",
-            code="INVALID_REGEX"
-        )
+        raise ToolError(f"Invalid regex pattern: {str(e)}", code="INVALID_REGEX")
 
     # Determine which sessions to search
     if session_id:
         # Search specific session
         if session_id not in active_sessions:
-            raise ToolError(
-                f"Session {session_id} not found",
-                code="SESSION_NOT_FOUND"
-            )
+            raise ToolError(f"Session {session_id} not found", code="SESSION_NOT_FOUND")
 
         sessions_to_search = {session_id: active_sessions[session_id]}
     else:
@@ -208,7 +187,7 @@ def search_session_history(
                 log_file=monitor.session.log_file,
                 query=query,
                 context_lines=context_lines,
-                max_results=max_results
+                max_results=max_results,
             )
 
             # Add session_id to each match
@@ -235,15 +214,12 @@ def search_session_history(
     return {
         "matches": all_matches,
         "total_matches": len(all_matches),
-        "searched_sessions": searched_sessions
+        "searched_sessions": searched_sessions,
     }
 
 
 @mcp.tool()
-def cleanup_old_sessions(
-    retention_days: int = 7,
-    dry_run: bool = False
-) -> dict:
+def cleanup_old_sessions(retention_days: int = 7, dry_run: bool = False) -> dict:
     """Clean up expired session data based on retention policy.
 
     Removes session log files older than the retention period to free disk space
@@ -264,20 +240,16 @@ def cleanup_old_sessions(
     Raises:
         ToolError: If retention_days is out of range
     """
-    from shellsidekick.core.storage import cleanup_old_sessions as cleanup_func, STORAGE_DIR
+    from shellsidekick.core.storage import STORAGE_DIR
+    from shellsidekick.core.storage import cleanup_old_sessions as cleanup_func
 
     # Validate retention_days
     if retention_days < 1 or retention_days > 365:
-        raise ToolError(
-            "retention_days must be between 1 and 365",
-            code="INVALID_RETENTION_DAYS"
-        )
+        raise ToolError("retention_days must be between 1 and 365", code="INVALID_RETENTION_DAYS")
 
     # Run cleanup
     result = cleanup_func(
-        sessions_dir=str(STORAGE_DIR),
-        retention_days=retention_days,
-        dry_run=dry_run
+        sessions_dir=str(STORAGE_DIR), retention_days=retention_days, dry_run=dry_run
     )
 
     action = "Would delete" if dry_run else "Deleted"

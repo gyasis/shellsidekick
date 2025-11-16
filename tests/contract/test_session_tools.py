@@ -1,9 +1,9 @@
 """Contract tests for session management MCP tools."""
 
 import os
-import pytest
 import tempfile
-from pathlib import Path
+
+import pytest
 
 # Note: FastMCP client testing will be implemented once tools are available
 # These tests define the contract that the tools must satisfy
@@ -15,7 +15,7 @@ class TestStartSessionMonitor:
     @pytest.fixture
     def test_log_file(self):
         """Create a temporary log file for testing."""
-        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.log') as f:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log") as f:
             f.write("Initial log content\n")
             log_path = f.name
         yield log_path

@@ -7,6 +7,7 @@ from datetime import datetime
 @dataclass
 class ResponseStats:
     """Statistics for a specific response to a prompt."""
+
     count: int
     success_count: int
 
@@ -28,6 +29,7 @@ class Pattern:
         last_seen: Last time this prompt was detected (ISO 8601)
         created_at: When pattern was first learned (ISO 8601)
     """
+
     pattern_id: str
     prompt_text: str
     responses: dict[str, ResponseStats]
@@ -52,7 +54,7 @@ class Pattern:
             },
             "total_occurrences": self.total_occurrences,
             "last_seen": self.last_seen.isoformat(),
-            "created_at": self.created_at.isoformat()
+            "created_at": self.created_at.isoformat(),
         }
 
     @classmethod
@@ -68,8 +70,7 @@ class Pattern:
         # Reconstruct ResponseStats objects
         responses = {
             text: ResponseStats(
-                count=stats_dict["count"],
-                success_count=stats_dict["success_count"]
+                count=stats_dict["count"], success_count=stats_dict["success_count"]
             )
             for text, stats_dict in data["responses"].items()
         }
@@ -80,5 +81,5 @@ class Pattern:
             responses=responses,
             total_occurrences=data["total_occurrences"],
             last_seen=datetime.fromisoformat(data["last_seen"]),
-            created_at=datetime.fromisoformat(data["created_at"])
+            created_at=datetime.fromisoformat(data["created_at"]),
         )

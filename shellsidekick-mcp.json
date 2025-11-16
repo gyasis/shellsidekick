@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "shellsidekick": {
+      "command": "uv",
+      "args": [
+        "run",
+        "shellsidekick"
+      ],
+      "cwd": "/home/gyasis/Documents/code/shellsidekick"
+    }
+  }
+}

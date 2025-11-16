@@ -1,8 +1,6 @@
 """Contract tests for pattern persistence (T056)."""
 
-import pytest
 import uuid
-from pathlib import Path
 
 
 class TestPatternPersistence:
@@ -10,9 +8,9 @@ class TestPatternPersistence:
 
     def test_save_and_load_patterns(self, tmp_path):
         """Test that patterns are saved and can be reloaded."""
+        from shellsidekick.core import storage
         from shellsidekick.core.patterns import PatternLearner
         from shellsidekick.models.input_event import InputSource
-        from shellsidekick.core import storage
 
         # Temporarily override storage location for test
         original_patterns_file = storage.PATTERNS_FILE
@@ -31,7 +29,7 @@ class TestPatternPersistence:
                     input_text="yes",
                     success=True,
                     input_source=InputSource.USER_TYPED,
-                    response_time_ms=200
+                    response_time_ms=200,
                 )
 
             # Manually save patterns
@@ -58,10 +56,11 @@ class TestPatternPersistence:
 
     def test_patterns_survive_restart(self, tmp_path):
         """Test that patterns persist across PatternLearner instances."""
+        import uuid
+
+        from shellsidekick.core import storage
         from shellsidekick.core.patterns import PatternLearner
         from shellsidekick.models.input_event import InputSource
-        from shellsidekick.core import storage
-        import uuid
 
         # Temporarily override storage location
         original_patterns_file = storage.PATTERNS_FILE
@@ -79,7 +78,7 @@ class TestPatternPersistence:
                 input_text="no",
                 success=True,
                 input_source=InputSource.USER_TYPED,
-                response_time_ms=150
+                response_time_ms=150,
             )
 
             # Simulate server restart - create new learner with auto_load
@@ -98,7 +97,7 @@ class TestPatternPersistence:
                 input_text="no",
                 success=True,
                 input_source=InputSource.USER_TYPED,
-                response_time_ms=140
+                response_time_ms=140,
             )
 
             # Another restart
@@ -112,8 +111,8 @@ class TestPatternPersistence:
 
     def test_empty_storage_loads_gracefully(self, tmp_path):
         """Test that loading from empty storage doesn't crash."""
-        from shellsidekick.core.patterns import PatternLearner
         from shellsidekick.core import storage
+        from shellsidekick.core.patterns import PatternLearner
 
         # Point to non-existent file
         original_patterns_file = storage.PATTERNS_FILE
@@ -131,11 +130,12 @@ class TestPatternPersistence:
 
     def test_pattern_datetime_serialization(self, tmp_path):
         """Test that datetime fields serialize/deserialize correctly."""
-        from shellsidekick.core.patterns import PatternLearner
-        from shellsidekick.models.input_event import InputSource
-        from shellsidekick.core import storage
         import uuid
         from datetime import datetime
+
+        from shellsidekick.core import storage
+        from shellsidekick.core.patterns import PatternLearner
+        from shellsidekick.models.input_event import InputSource
 
         original_patterns_file = storage.PATTERNS_FILE
         test_patterns_file = tmp_path / "patterns.json"
@@ -154,7 +154,7 @@ class TestPatternPersistence:
                 input_text="test",
                 success=True,
                 input_source=InputSource.USER_TYPED,
-                response_time_ms=100
+                response_time_ms=100,
             )
 
             after_time = datetime.now()

@@ -6,10 +6,10 @@ from typing import Optional
 
 from fastmcp.exceptions import ToolError
 
+from shellsidekick.core.monitor import SessionMonitor
 from shellsidekick.mcp.server import mcp
 from shellsidekick.mcp.session_state import active_sessions
 from shellsidekick.models.session import Session, SessionState, SessionType
-from shellsidekick.core.monitor import SessionMonitor
 from shellsidekick.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -17,10 +17,7 @@ logger = get_logger(__name__)
 
 @mcp.tool()
 def start_session_monitor(
-    session_id: str,
-    session_type: str,
-    log_file: str,
-    metadata: Optional[dict[str, str]] = None
+    session_id: str, session_type: str, log_file: str, metadata: Optional[dict[str, str]] = None
 ) -> dict:
     """Start monitoring a terminal session.
 
@@ -38,24 +35,15 @@ def start_session_monitor(
     """
     # Check for duplicate session
     if session_id in active_sessions:
-        raise ToolError(
-            f"Session {session_id} already exists",
-            code="SESSION_ALREADY_EXISTS"
-        )
+        raise ToolError(f"Session {session_id} already exists", code="SESSION_ALREADY_EXISTS")
 
     # Validate file exists
     if not os.path.exists(log_file):
-        raise ToolError(
-            f"Log file not found: {log_file}",
-            code="FILE_NOT_FOUND"
-        )
+        raise ToolError(f"Log file not found: {log_file}", code="FILE_NOT_FOUND")
 
     # Validate file is readable
     if not os.access(log_file, os.R_OK):
-        raise ToolError(
-            f"Cannot read log file: {log_file}",
-            code="FILE_NOT_READABLE"
-        )
+        raise ToolError(f"Cannot read log file: {log_file}", code="FILE_NOT_READABLE")
 
     # Create session
     session = Session(
@@ -65,7 +53,7 @@ def start_session_monitor(
         file_position=0,
         start_time=datetime.now(),
         state=SessionState.ACTIVE,
-        metadata=metadata
+        metadata=metadata,
     )
 
     # Create monitor
@@ -91,10 +79,7 @@ def get_session_updates(session_id: str) -> dict:
         ToolError: If session not found or file read error
     """
     if session_id not in active_sessions:
-        raise ToolError(
-            f"Session {session_id} not found",
-            code="SESSION_NOT_FOUND"
-        )
+        raise ToolError(f"Session {session_id} not found", code="SESSION_NOT_FOUND")
 
     monitor = active_sessions[session_id]
 
@@ -105,21 +90,15 @@ def get_session_updates(session_id: str) -> dict:
             "session_id": session_id,
             "new_content": new_content,
             "file_position": monitor.session.file_position,
-            "has_more": has_more
+            "has_more": has_more,
         }
 
     except (FileNotFoundError, PermissionError) as e:
-        raise ToolError(
-            f"Failed to read log file: {str(e)}",
-            code="FILE_READ_ERROR"
-        )
+        raise ToolError(f"Failed to read log file: {str(e)}", code="FILE_READ_ERROR")
 
 
 @mcp.tool()
-def stop_session_monitor(
-    session_id: str,
-    save_log: bool = False
-) -> dict:
+def stop_session_monitor(session_id: str, save_log: bool = False) -> dict:
     """Stop monitoring a session and cleanup resources.
 
     Args:
@@ -133,10 +112,7 @@ def stop_session_monitor(
         ToolError: If session not found
     """
     if session_id not in active_sessions:
-        raise ToolError(
-            f"Session {session_id} not found",
-            code="SESSION_NOT_FOUND"
-        )
+        raise ToolError(f"Session {session_id} not found", code="SESSION_NOT_FOUND")
 
     monitor = active_sessions[session_id]
     stats = monitor.stop(save_log=save_log)

@@ -16,7 +16,7 @@ def setup_logging(level: str = "INFO") -> None:
         level=log_level,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
-        stream=sys.stderr
+        stream=sys.stderr,
     )
 
     # Set library loggers to WARNING to reduce noise

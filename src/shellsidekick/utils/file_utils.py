@@ -24,7 +24,7 @@ def read_from_position(file_path: str, position: int) -> Tuple[str, int]:
     if not os.access(file_path, os.R_OK):
         raise PermissionError(f"Cannot read file: {file_path}")
 
-    with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
+    with open(file_path, "r", encoding="utf-8", errors="replace") as f:
         f.seek(position)
         new_content = f.read()
         new_position = f.tell()
@@ -52,5 +52,5 @@ def ensure_file_exists(file_path: str) -> None:
     """
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     if not os.path.exists(file_path):
-        with open(file_path, 'w') as f:
+        with open(file_path, "w") as _:
             pass

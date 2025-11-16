@@ -1,10 +1,9 @@
 """Session monitoring with file position tracking."""
 
 from datetime import datetime
-from typing import Optional
 
-from shellsidekick.models.session import Session, SessionState, SessionType
-from shellsidekick.utils.file_utils import read_from_position, get_file_size
+from shellsidekick.models.session import Session, SessionState
+from shellsidekick.utils.file_utils import get_file_size, read_from_position
 
 
 class SessionMonitor:
@@ -32,12 +31,10 @@ class SessionMonitor:
         """
         try:
             new_content, new_position = read_from_position(
-                self.session.log_file,
-                self.session.file_position
+                self.session.log_file, self.session.file_position
             )
 
             # Update session file position
-            old_position = self.session.file_position
             self.session.file_position = new_position
 
             # Check if there's more content (file grew during read)
@@ -81,7 +78,7 @@ class SessionMonitor:
             "session_id": self.session.session_id,
             "status": self.session.state.value,
             "total_bytes_processed": self.session.file_position,
-            "session_duration_seconds": duration
+            "session_duration_seconds": duration,
         }
 
         # Clean up log file if requested

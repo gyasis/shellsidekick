@@ -7,6 +7,7 @@ from enum import Enum
 
 class InputSource(str, Enum):
     """Source of the input."""
+
     USER_TYPED = "user_typed"
     AI_SUGGESTED = "ai_suggested"
     AUTO_INJECTED = "auto_injected"
@@ -26,6 +27,7 @@ class InputEvent:
         input_source: How input was provided
         response_time_ms: Time between prompt and input (milliseconds)
     """
+
     event_id: str
     session_id: str
     timestamp: datetime
@@ -45,5 +47,5 @@ class InputEvent:
             "input_text": self.input_text,
             "success": self.success,
             "input_source": self.input_source.value,
-            "response_time_ms": self.response_time_ms
+            "response_time_ms": self.response_time_ms,
         }

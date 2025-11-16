@@ -62,3 +62,11 @@ htmlcov/
 .cursor/
 claude.md
 cursor.md
+
+# Research documents (valuable but keep in docs/research/)
+SECURITY_AUDIT.md
+PHASE8_TEST_REPORT.md
+WATCHDOG_ANALYSIS.md
+GAP_ANALYSIS.md
+DEMO.md
+SPECKIT_CHEATSHEET.md

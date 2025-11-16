@@ -1,6 +1,7 @@
 """Contract tests for history and pattern retrieval MCP tools."""
 
 import os
+
 import pytest
 
 
@@ -23,9 +24,10 @@ class TestGetLearnedPatterns:
 
     def test_get_all_patterns_with_data(self):
         """Test getting all patterns after tracking events."""
+        import uuid
+
         from shellsidekick.core.patterns import PatternLearner
         from shellsidekick.models.input_event import InputSource
-        import uuid
 
         learner = PatternLearner(auto_load=False)
         session_id = str(uuid.uuid4())
@@ -37,7 +39,7 @@ class TestGetLearnedPatterns:
             input_text="yes",
             success=True,
             input_source=InputSource.USER_TYPED,
-            response_time_ms=200
+            response_time_ms=200,
         )
 
         learner.track_input_event(
@@ -46,7 +48,7 @@ class TestGetLearnedPatterns:
             input_text="no",
             success=True,
             input_source=InputSource.AI_SUGGESTED,
-            response_time_ms=150
+            response_time_ms=150,
         )
 
         # Get all patterns
@@ -71,9 +73,10 @@ class TestGetLearnedPatterns:
 
     def test_filter_patterns_by_prompt_text(self):
         """Test filtering patterns by prompt text substring."""
+        import uuid
+
         from shellsidekick.core.patterns import PatternLearner
         from shellsidekick.models.input_event import InputSource
-        import uuid
 
         learner = PatternLearner(auto_load=False)
         session_id = str(uuid.uuid4())
@@ -85,7 +88,7 @@ class TestGetLearnedPatterns:
             input_text="yes",
             success=True,
             input_source=InputSource.USER_TYPED,
-            response_time_ms=200
+            response_time_ms=200,
         )
 
         learner.track_input_event(
@@ -94,7 +97,7 @@ class TestGetLearnedPatterns:
             input_text="yes",
             success=True,
             input_source=InputSource.USER_TYPED,
-            response_time_ms=150
+            response_time_ms=150,
         )
 
         # Filter for "Restart"
@@ -106,9 +109,10 @@ class TestGetLearnedPatterns:
 
     def test_filter_by_min_occurrences(self):
         """Test filtering patterns by minimum occurrences."""
+        import uuid
+
         from shellsidekick.core.patterns import PatternLearner
         from shellsidekick.models.input_event import InputSource
-        import uuid
 
         learner = PatternLearner(auto_load=False)
         session_id = str(uuid.uuid4())
@@ -121,7 +125,7 @@ class TestGetLearnedPatterns:
                 input_text="yes",
                 success=True,
                 input_source=InputSource.USER_TYPED,
-                response_time_ms=200
+                response_time_ms=200,
             )
 
         # Track another prompt once
@@ -131,7 +135,7 @@ class TestGetLearnedPatterns:
             input_text="no",
             success=True,
             input_source=InputSource.USER_TYPED,
-            response_time_ms=150
+            response_time_ms=150,
         )
 
         # Filter for min_occurrences=3
@@ -142,9 +146,10 @@ class TestGetLearnedPatterns:
 
     def test_sort_patterns_by_occurrences(self):
         """Test sorting patterns by occurrence count."""
+        import uuid
+
         from shellsidekick.core.patterns import PatternLearner
         from shellsidekick.models.input_event import InputSource
-        import uuid
 
         learner = PatternLearner(auto_load=False)
         session_id = str(uuid.uuid4())
@@ -157,7 +162,7 @@ class TestGetLearnedPatterns:
                 input_text="yes",
                 success=True,
                 input_source=InputSource.USER_TYPED,
-                response_time_ms=200
+                response_time_ms=200,
             )
 
         # Track prompt B 2 times
@@ -168,7 +173,7 @@ class TestGetLearnedPatterns:
                 input_text="no",
                 success=True,
                 input_source=InputSource.USER_TYPED,
-                response_time_ms=150
+                response_time_ms=150,
             )
 
         # Sort by occurrences (descending)
@@ -183,9 +188,10 @@ class TestGetLearnedPatterns:
 
     def test_pattern_success_rate_calculation(self):
         """Test that success rate is calculated correctly."""
+        import uuid
+
         from shellsidekick.core.patterns import PatternLearner
         from shellsidekick.models.input_event import InputSource
-        import uuid
 
         learner = PatternLearner(auto_load=False)
         session_id = str(uuid.uuid4())
@@ -198,7 +204,7 @@ class TestGetLearnedPatterns:
                 input_text="5",
                 success=True,
                 input_source=InputSource.USER_TYPED,
-                response_time_ms=200
+                response_time_ms=200,
             )
 
         learner.track_input_event(
@@ -207,7 +213,7 @@ class TestGetLearnedPatterns:
             input_text="5",
             success=False,
             input_source=InputSource.USER_TYPED,
-            response_time_ms=180
+            response_time_ms=180,
         )
 
         # Get patterns
@@ -222,9 +228,10 @@ class TestGetLearnedPatterns:
 
     def test_all_responses_field(self):
         """Test that all_responses includes all response variants."""
+        import uuid
+
         from shellsidekick.core.patterns import PatternLearner
         from shellsidekick.models.input_event import InputSource
-        import uuid
 
         learner = PatternLearner(auto_load=False)
         session_id = str(uuid.uuid4())
@@ -236,7 +243,7 @@ class TestGetLearnedPatterns:
             input_text="1",
             success=True,
             input_source=InputSource.USER_TYPED,
-            response_time_ms=200
+            response_time_ms=200,
         )
 
         learner.track_input_event(
@@ -245,7 +252,7 @@ class TestGetLearnedPatterns:
             input_text="2",
             success=True,
             input_source=InputSource.USER_TYPED,
-            response_time_ms=150
+            response_time_ms=150,
         )
 
         learner.track_input_event(
@@ -254,7 +261,7 @@ class TestGetLearnedPatterns:
             input_text="1",
             success=True,
             input_source=InputSource.USER_TYPED,
-            response_time_ms=180
+            response_time_ms=180,
         )
 
         # Get patterns
@@ -294,10 +301,7 @@ class TestSearchSessionHistory:
 
         # Search for ERROR pattern
         results = search_log_file(
-            log_file=str(log_file),
-            query="ERROR",
-            context_lines=0,
-            max_results=10
+            log_file=str(log_file), query="ERROR", context_lines=0, max_results=10
         )
 
         assert len(results) == 2
@@ -313,19 +317,12 @@ class TestSearchSessionHistory:
         # Create test log file
         log_file = tmp_path / "test-session.log"
         log_file.write_text(
-            "Line 1\n"
-            "Line 2\n"
-            "ERROR: Something went wrong\n"
-            "Line 4\n"
-            "Line 5\n"
+            "Line 1\n" "Line 2\n" "ERROR: Something went wrong\n" "Line 4\n" "Line 5\n"
         )
 
         # Search with 2 lines of context
         results = search_log_file(
-            log_file=str(log_file),
-            query="ERROR",
-            context_lines=2,
-            max_results=10
+            log_file=str(log_file), query="ERROR", context_lines=2, max_results=10
         )
 
         assert len(results) == 1
@@ -358,10 +355,7 @@ class TestSearchSessionHistory:
 
         # Search for 4xx and 5xx errors using regex
         results = search_log_file(
-            log_file=str(log_file),
-            query=r"ERROR: [45]\d{2}",
-            context_lines=0,
-            max_results=10
+            log_file=str(log_file), query=r"ERROR: [45]\d{2}", context_lines=0, max_results=10
         )
 
         assert len(results) == 3
@@ -380,10 +374,7 @@ class TestSearchSessionHistory:
 
         # Search with max_results limit
         results = search_log_file(
-            log_file=str(log_file),
-            query="ERROR",
-            context_lines=0,
-            max_results=10
+            log_file=str(log_file), query="ERROR", context_lines=0, max_results=10
         )
 
         # Should return only 10 results
@@ -400,25 +391,20 @@ class TestSearchSessionHistory:
 
         # Create test log file
         log_file = tmp_path / "test-session.log"
-        log_file.write_text(
-            "Normal log entry\n"
-            "Another normal entry\n"
-        )
+        log_file.write_text("Normal log entry\n" "Another normal entry\n")
 
         # Search for pattern that doesn't exist
         results = search_log_file(
-            log_file=str(log_file),
-            query="NONEXISTENT_PATTERN",
-            context_lines=0,
-            max_results=10
+            log_file=str(log_file), query="NONEXISTENT_PATTERN", context_lines=0, max_results=10
         )
 
         assert len(results) == 0
 
     def test_search_invalid_regex_raises_error(self, tmp_path):
         """Test that invalid regex patterns raise appropriate error."""
-        from shellsidekick.core.storage import search_log_file
         import re
+
+        from shellsidekick.core.storage import search_log_file
 
         log_file = tmp_path / "test-session.log"
         log_file.write_text("Some content\n")
@@ -426,10 +412,7 @@ class TestSearchSessionHistory:
         # Invalid regex pattern (unclosed bracket)
         with pytest.raises(re.error):
             search_log_file(
-                log_file=str(log_file),
-                query="[unclosed",
-                context_lines=0,
-                max_results=10
+                log_file=str(log_file), query="[unclosed", context_lines=0, max_results=10
             )
 
 
@@ -438,8 +421,9 @@ class TestCleanupOldSessions:
 
     def test_cleanup_dry_run_mode(self, tmp_path):
         """T070: Test cleanup dry run mode."""
-        from shellsidekick.core.storage import cleanup_old_sessions
         import time
+
+        from shellsidekick.core.storage import cleanup_old_sessions
 
         # Create old session file (8 days ago)
         old_session = tmp_path / "old-session.log"
@@ -450,11 +434,7 @@ class TestCleanupOldSessions:
         os.utime(old_session, (eight_days_ago, eight_days_ago))
 
         # Run cleanup in dry run mode
-        result = cleanup_old_sessions(
-            sessions_dir=str(tmp_path),
-            retention_days=7,
-            dry_run=True
-        )
+        result = cleanup_old_sessions(sessions_dir=str(tmp_path), retention_days=7, dry_run=True)
 
         # File should still exist (dry run)
         assert old_session.exists()
@@ -466,8 +446,9 @@ class TestCleanupOldSessions:
 
     def test_cleanup_actual_deletion(self, tmp_path):
         """T069: Test actual session cleanup."""
-        from shellsidekick.core.storage import cleanup_old_sessions
         import time
+
+        from shellsidekick.core.storage import cleanup_old_sessions
 
         # Create old session file (8 days ago)
         old_session = tmp_path / "old-session.log"
@@ -484,11 +465,7 @@ class TestCleanupOldSessions:
         os.utime(recent_session, (two_days_ago, two_days_ago))
 
         # Run actual cleanup
-        result = cleanup_old_sessions(
-            sessions_dir=str(tmp_path),
-            retention_days=7,
-            dry_run=False
-        )
+        result = cleanup_old_sessions(sessions_dir=str(tmp_path), retention_days=7, dry_run=False)
 
         # Old file should be deleted
         assert not old_session.exists()
@@ -504,8 +481,9 @@ class TestCleanupOldSessions:
 
     def test_cleanup_retention_boundary(self, tmp_path):
         """Test that files exactly at retention days are NOT deleted."""
-        from shellsidekick.core.storage import cleanup_old_sessions
         import time
+
+        from shellsidekick.core.storage import cleanup_old_sessions
 
         # Create session file 7 days minus 10 seconds old
         # (slightly newer than the boundary to avoid timing edge cases)
@@ -517,11 +495,7 @@ class TestCleanupOldSessions:
         os.utime(seven_day_session, (seven_days_minus, seven_days_minus))
 
         # Run cleanup with 7-day retention
-        result = cleanup_old_sessions(
-            sessions_dir=str(tmp_path),
-            retention_days=7,
-            dry_run=False
-        )
+        result = cleanup_old_sessions(sessions_dir=str(tmp_path), retention_days=7, dry_run=False)
 
         # File should NOT be deleted (it's within the 7-day retention window)
         assert seven_day_session.exists()

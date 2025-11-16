@@ -3,13 +3,13 @@
 import hashlib
 import uuid
 from datetime import datetime
-from typing import List, Dict
+from typing import Dict, List
 
+from shellsidekick.core.storage import load_patterns, save_patterns
 from shellsidekick.models.input_event import InputEvent, InputSource
 from shellsidekick.models.pattern import Pattern, ResponseStats
-from shellsidekick.utils.security import is_password_prompt
 from shellsidekick.utils.logging import get_logger
-from shellsidekick.core.storage import save_patterns, load_patterns
+from shellsidekick.utils.security import is_password_prompt
 
 logger = get_logger(__name__)
 
@@ -37,7 +37,7 @@ class PatternLearner:
         input_text: str,
         success: bool,
         input_source: InputSource,
-        response_time_ms: int
+        response_time_ms: int,
     ) -> dict:
         """Track a user input event and update learned patterns.
 
@@ -70,7 +70,7 @@ class PatternLearner:
             input_text=input_text,
             success=success,
             input_source=input_source,
-            response_time_ms=response_time_ms
+            response_time_ms=response_time_ms,
         )
 
         # Store event
@@ -89,11 +89,7 @@ class PatternLearner:
             f"pattern_updated={pattern_updated}"
         )
 
-        return {
-            "event_id": event_id,
-            "recorded": True,
-            "pattern_updated": pattern_updated
-        }
+        return {"event_id": event_id, "recorded": True, "pattern_updated": pattern_updated}
 
     def _update_pattern(self, prompt_text: str, input_text: str, success: bool) -> bool:
         """Update learned pattern with new prompt-response pair.
@@ -117,7 +113,7 @@ class PatternLearner:
                 responses={},
                 total_occurrences=0,
                 last_seen=datetime.now(),
-                created_at=datetime.now()
+                created_at=datetime.now(),
             )
             logger.debug(f"Created new pattern {pattern_id} for prompt: '{prompt_text[:50]}...'")
 
@@ -159,7 +155,7 @@ class PatternLearner:
         normalized = prompt_text.lower().strip()
 
         # Generate hash
-        hash_obj = hashlib.sha256(normalized.encode('utf-8'))
+        hash_obj = hashlib.sha256(normalized.encode("utf-8"))
         return hash_obj.hexdigest()[:16]
 
     def get_session_events(self, session_id: str) -> List[InputEvent]:
@@ -197,7 +193,7 @@ class PatternLearner:
         self,
         prompt_filter: str | None = None,
         min_occurrences: int = 1,
-        sort_by: str = "occurrences"
+        sort_by: str = "occurrences",
     ) -> dict:
         """Get learned patterns with filtering and sorting.
 
@@ -214,10 +210,7 @@ class PatternLearner:
 
         # Apply prompt filter
         if prompt_filter:
-            patterns = [
-                p for p in patterns
-                if prompt_filter.lower() in p.prompt_text.lower()
-            ]
+            patterns = [p for p in patterns if prompt_filter.lower() in p.prompt_text.lower()]
 
         # Apply min_occurrences filter
         patterns = [p for p in patterns if p.total_occurrences >= min_occurrences]
@@ -245,7 +238,7 @@ class PatternLearner:
                 most_common_response = {
                     "input_text": mcr_text,
                     "count": mcr_stats.count,
-                    "success_rate": mcr_stats.success_rate
+                    "success_rate": mcr_stats.success_rate,
                 }
             else:
                 most_common_response = None
@@ -256,23 +249,22 @@ class PatternLearner:
                     "input_text": text,
                     "count": stats.count,
                     "success_count": stats.success_count,
-                    "success_rate": stats.success_rate
+                    "success_rate": stats.success_rate,
                 }
                 for text, stats in pattern.responses.items()
             ]
 
-            formatted_patterns.append({
-                "prompt_text": pattern.prompt_text,
-                "total_occurrences": pattern.total_occurrences,
-                "most_common_response": most_common_response,
-                "all_responses": all_responses,
-                "last_seen": pattern.last_seen.isoformat()
-            })
+            formatted_patterns.append(
+                {
+                    "prompt_text": pattern.prompt_text,
+                    "total_occurrences": pattern.total_occurrences,
+                    "most_common_response": most_common_response,
+                    "all_responses": all_responses,
+                    "last_seen": pattern.last_seen.isoformat(),
+                }
+            )
 
-        return {
-            "patterns": formatted_patterns,
-            "total_patterns": len(formatted_patterns)
-        }
+        return {"patterns": formatted_patterns, "total_patterns": len(formatted_patterns)}
 
     def load_from_storage(self) -> int:
         """Load patterns from JSON storage.

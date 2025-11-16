@@ -1,13 +1,13 @@
 """MCP tools for prompt detection and analysis."""
 
-from typing import Optional, Dict
+from typing import Dict, Optional
 
 from fastmcp.exceptions import ToolError
 
-from shellsidekick.mcp.server import mcp
-from shellsidekick.mcp.session_state import active_sessions, pattern_learner
 from shellsidekick.core.detector import PromptDetector
 from shellsidekick.core.inference import InputInferenceEngine
+from shellsidekick.mcp.server import mcp
+from shellsidekick.mcp.session_state import active_sessions, pattern_learner
 from shellsidekick.models.prompt import PromptType
 from shellsidekick.utils.logging import get_logger
 
@@ -15,10 +15,7 @@ logger = get_logger(__name__)
 
 
 @mcp.tool()
-def detect_input_prompt(
-    session_id: str,
-    min_confidence: float = 0.70
-) -> dict:
+def detect_input_prompt(session_id: str, min_confidence: float = 0.70) -> dict:
     """Analyze session output to detect if terminal is waiting for input.
 
     Args:
@@ -35,17 +32,11 @@ def detect_input_prompt(
     """
     # Validate session exists
     if session_id not in active_sessions:
-        raise ToolError(
-            f"Session {session_id} not found",
-            code="SESSION_NOT_FOUND"
-        )
+        raise ToolError(f"Session {session_id} not found", code="SESSION_NOT_FOUND")
 
     # Validate confidence range
     if not 0.0 <= min_confidence <= 1.0:
-        raise ToolError(
-            "Confidence must be between 0.0 and 1.0",
-            code="INVALID_CONFIDENCE"
-        )
+        raise ToolError("Confidence must be between 0.0 and 1.0", code="INVALID_CONFIDENCE")
 
     monitor = active_sessions[session_id]
 
@@ -53,19 +44,13 @@ def detect_input_prompt(
     try:
         content, _ = monitor.get_updates()
     except Exception as e:
-        raise ToolError(
-            f"Failed to read session content: {str(e)}",
-            code="FILE_READ_ERROR"
-        )
+        raise ToolError(f"Failed to read session content: {str(e)}", code="FILE_READ_ERROR")
 
     # Initialize detector
     detector = PromptDetector(min_confidence=min_confidence)
 
     # Detect prompt
-    detection = detector.detect(
-        content,
-        file_position=monitor.session.file_position
-    )
+    detection = detector.detect(content, file_position=monitor.session.file_position)
 
     if detection:
         logger.info(
@@ -73,22 +58,14 @@ def detect_input_prompt(
             f"(confidence: {detection.confidence:.2f})"
         )
 
-        return {
-            "detected": True,
-            "prompt": detection.to_dict()
-        }
+        return {"detected": True, "prompt": detection.to_dict()}
     else:
-        return {
-            "detected": False,
-            "prompt": None
-        }
+        return {"detected": False, "prompt": None}
 
 
 @mcp.tool()
 def infer_expected_input(
-    prompt_text: str,
-    prompt_type: str,
-    session_context: Optional[Dict] = None
+    prompt_text: str, prompt_type: str, session_context: Optional[Dict] = None
 ) -> dict:
     """Suggest appropriate inputs based on prompt context.
 
@@ -112,7 +89,7 @@ def infer_expected_input(
         raise ToolError(
             f"Invalid prompt_type: {prompt_type}. Must be one of: "
             f"{', '.join([t.value for t in PromptType])}",
-            code="INVALID_PROMPT_TYPE"
+            code="INVALID_PROMPT_TYPE",
         )
 
     # Initialize inference engine with pattern learning
@@ -120,9 +97,7 @@ def infer_expected_input(
 
     # Get suggestions and warnings
     suggestions, warnings = engine.infer_inputs(
-        prompt_text=prompt_text,
-        prompt_type=pt,
-        session_context=session_context
+        prompt_text=prompt_text, prompt_type=pt, session_context=session_context
     )
 
     logger.info(
@@ -130,11 +105,6 @@ def infer_expected_input(
     )
 
     if warnings:
-        logger.warning(
-            f"Generated {len(warnings)} warnings for prompt: '{prompt_text}'"
-        )
+        logger.warning(f"Generated {len(warnings)} warnings for prompt: '{prompt_text}'")
 
-    return {
-        "suggestions": [s.to_dict() for s in suggestions],
-        "warnings": warnings
-    }
+    return {"suggestions": [s.to_dict() for s in suggestions], "warnings": warnings}

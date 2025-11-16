@@ -1,15 +1,15 @@
 """Pytest configuration and fixtures."""
 
-import pytest
-import tempfile
 import os
-from pathlib import Path
+import tempfile
+
+import pytest
 
 
 @pytest.fixture
 def temp_log_file():
     """Create a temporary log file for testing."""
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.log') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log") as f:
         f.write("Initial log content\n")
         log_path = f.name
 
@@ -34,4 +34,5 @@ def cleanup_active_sessions():
     yield
     # Import here to avoid circular dependencies
     from shellsidekick.mcp.session_state import active_sessions
+
     active_sessions.clear()

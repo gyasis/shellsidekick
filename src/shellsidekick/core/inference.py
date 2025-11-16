@@ -1,8 +1,8 @@
 """Context inference logic for suggesting inputs based on prompts."""
 
 import re
-from typing import List, Dict, Optional
 from dataclasses import dataclass
+from typing import Dict, List, Optional
 
 from shellsidekick.models.prompt import PromptType
 from shellsidekick.utils.security import is_dangerous_operation
@@ -11,6 +11,7 @@ from shellsidekick.utils.security import is_dangerous_operation
 @dataclass
 class InputSuggestion:
     """A suggested input with confidence and reasoning."""
+
     input_text: str
     confidence: float  # 0.0-1.0
     source: str  # "pattern_learning", "context_inference", "default"
@@ -22,7 +23,7 @@ class InputSuggestion:
             "input_text": self.input_text,
             "confidence": self.confidence,
             "source": self.source,
-            "reasoning": self.reasoning
+            "reasoning": self.reasoning,
         }
 
 
@@ -38,10 +39,7 @@ class InputInferenceEngine:
         self.pattern_learner = pattern_learner
 
     def infer_inputs(
-        self,
-        prompt_text: str,
-        prompt_type: PromptType,
-        session_context: Optional[Dict] = None
+        self, prompt_text: str, prompt_type: PromptType, session_context: Optional[Dict] = None
     ) -> tuple[List[InputSuggestion], List[str]]:
         """Infer expected inputs based on prompt and context.
 
@@ -64,8 +62,8 @@ class InputInferenceEngine:
         # Check for dangerous operations
         if is_dangerous_operation(prompt_text):
             warnings.append(
-                f"⚠️  Dangerous operation detected: This prompt involves potentially "
-                f"destructive actions. Review carefully before proceeding."
+                "⚠️  Dangerous operation detected: This prompt involves potentially "
+                "destructive actions. Review carefully before proceeding."
             )
 
         # Try to get pattern-based suggestions first
@@ -122,9 +120,7 @@ class InputInferenceEngine:
         return []
 
     def _suggest_yes_no_inputs(
-        self,
-        prompt_text: str,
-        session_context: Optional[Dict] = None
+        self, prompt_text: str, session_context: Optional[Dict] = None
     ) -> List[InputSuggestion]:
         """Suggest yes/no inputs."""
         suggestions = []
@@ -134,36 +130,50 @@ class InputInferenceEngine:
 
         if is_dangerous:
             # Suggest "no" with higher confidence for dangerous operations
-            suggestions.append(InputSuggestion(
-                input_text="no",
-                confidence=0.85,
-                source="default",
-                reasoning="Recommended: Dangerous operation detected. Saying 'no' is the safer choice."
-            ))
-            suggestions.append(InputSuggestion(
-                input_text="yes",
-                confidence=0.60,
-                source="default",
-                reasoning="⚠️  Proceed with caution: This will execute a potentially dangerous operation."
-            ))
+            suggestions.append(
+                InputSuggestion(
+                    input_text="no",
+                    confidence=0.85,
+                    source="default",
+                    reasoning=(
+                        "Recommended: Dangerous operation detected. "
+                        "Saying 'no' is the safer choice."
+                    ),
+                )
+            )
+            suggestions.append(
+                InputSuggestion(
+                    input_text="yes",
+                    confidence=0.60,
+                    source="default",
+                    reasoning=(
+                        "⚠️  Proceed with caution: This will execute a "
+                        "potentially dangerous operation."
+                    ),
+                )
+            )
         else:
             # Normal yes/no suggestions
             context_info = ""
             if session_context and "working_directory" in session_context:
                 context_info = f" (working directory: {session_context['working_directory']})"
 
-            suggestions.append(InputSuggestion(
-                input_text="yes",
-                confidence=0.75,
-                source="default",
-                reasoning=f"Confirm the operation{context_info}"
-            ))
-            suggestions.append(InputSuggestion(
-                input_text="no",
-                confidence=0.75,
-                source="default",
-                reasoning=f"Cancel the operation{context_info}"
-            ))
+            suggestions.append(
+                InputSuggestion(
+                    input_text="yes",
+                    confidence=0.75,
+                    source="default",
+                    reasoning=f"Confirm the operation{context_info}",
+                )
+            )
+            suggestions.append(
+                InputSuggestion(
+                    input_text="no",
+                    confidence=0.75,
+                    source="default",
+                    reasoning=f"Cancel the operation{context_info}",
+                )
+            )
 
         return suggestions
 
@@ -172,59 +182,65 @@ class InputInferenceEngine:
         suggestions = []
 
         # Extract choice numbers from prompt (e.g., [1], [2], [3])
-        pattern = r'\[(\d+)\]'
+        pattern = r"\[(\d+)\]"
         matches = re.findall(pattern, prompt_text)
 
         for num in matches:
-            suggestions.append(InputSuggestion(
-                input_text=num,
-                confidence=0.80,
-                source="default",
-                reasoning=f"Select option {num}"
-            ))
+            suggestions.append(
+                InputSuggestion(
+                    input_text=num,
+                    confidence=0.80,
+                    source="default",
+                    reasoning=f"Select option {num}",
+                )
+            )
 
         return suggestions
 
     def _suggest_path_inputs(
-        self,
-        prompt_text: str,
-        session_context: Optional[Dict] = None
+        self, prompt_text: str, session_context: Optional[Dict] = None
     ) -> List[InputSuggestion]:
         """Suggest path inputs."""
         suggestions = []
 
         # Suggest current directory
-        suggestions.append(InputSuggestion(
-            input_text="./",
-            confidence=0.70,
-            source="default",
-            reasoning="Current directory (relative path)"
-        ))
+        suggestions.append(
+            InputSuggestion(
+                input_text="./",
+                confidence=0.70,
+                source="default",
+                reasoning="Current directory (relative path)",
+            )
+        )
 
         # Suggest common directories
-        suggestions.append(InputSuggestion(
-            input_text="/tmp/",
-            confidence=0.65,
-            source="default",
-            reasoning="Temporary directory"
-        ))
+        suggestions.append(
+            InputSuggestion(
+                input_text="/tmp/",
+                confidence=0.65,
+                source="default",
+                reasoning="Temporary directory",
+            )
+        )
 
-        suggestions.append(InputSuggestion(
-            input_text="/home/",
-            confidence=0.65,
-            source="default",
-            reasoning="Home directory"
-        ))
+        suggestions.append(
+            InputSuggestion(
+                input_text="/home/", confidence=0.65, source="default", reasoning="Home directory"
+            )
+        )
 
         # Context-aware suggestion
         if session_context and "working_directory" in session_context:
             wd = session_context["working_directory"]
-            suggestions.insert(0, InputSuggestion(
-                input_text=wd,
-                confidence=0.80,
-                source="context_inference",
-                reasoning=f"Current working directory from session context"
-            ))
+            suggestions.insert(
+                0,
+                InputSuggestion(
+                    input_text=wd,
+                    confidence=0.80,
+                    source="context_inference",
+                    reasoning="Current working directory from session context",
+                ),
+            )
 
         return suggestions
 
@@ -234,24 +250,21 @@ class InputInferenceEngine:
             ("help", "Display help information"),
             ("exit", "Exit the current session"),
             ("status", "Check status"),
-            ("ls", "List directory contents")
+            ("ls", "List directory contents"),
         ]
 
         suggestions = []
         for cmd, description in common_commands:
-            suggestions.append(InputSuggestion(
-                input_text=cmd,
-                confidence=0.60,
-                source="default",
-                reasoning=description
-            ))
+            suggestions.append(
+                InputSuggestion(
+                    input_text=cmd, confidence=0.60, source="default", reasoning=description
+                )
+            )
 
         return suggestions
 
     def _suggest_text_inputs(
-        self,
-        prompt_text: str,
-        session_context: Optional[Dict] = None
+        self, prompt_text: str, session_context: Optional[Dict] = None
     ) -> List[InputSuggestion]:
         """Suggest generic text inputs."""
         # For generic text prompts, we can't make good suggestions
@@ -279,11 +292,7 @@ class InputInferenceEngine:
 
         # Generate suggestions from pattern responses
         # Sort responses by count (most common first)
-        sorted_responses = sorted(
-            pattern.responses.items(),
-            key=lambda x: x[1].count,
-            reverse=True
-        )
+        sorted_responses = sorted(pattern.responses.items(), key=lambda x: x[1].count, reverse=True)
 
         for input_text, stats in sorted_responses:
             # Calculate confidence based on:
@@ -310,11 +319,13 @@ class InputInferenceEngine:
                 f"{stats.success_rate*100:.0f}% success rate"
             )
 
-            suggestions.append(InputSuggestion(
-                input_text=input_text,
-                confidence=confidence,
-                source="pattern_learning",
-                reasoning=reasoning
-            ))
+            suggestions.append(
+                InputSuggestion(
+                    input_text=input_text,
+                    confidence=confidence,
+                    source="pattern_learning",
+                    reasoning=reasoning,
+                )
+            )
 
         return suggestions

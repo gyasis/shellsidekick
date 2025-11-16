@@ -7,6 +7,7 @@ from enum import Enum
 
 class SessionType(str, Enum):
     """Type of session being monitored."""
+
     SSH = "ssh"
     SCRIPT = "script"
     FILE = "file"
@@ -14,6 +15,7 @@ class SessionType(str, Enum):
 
 class SessionState(str, Enum):
     """Current state of the session."""
+
     ACTIVE = "active"
     STOPPED = "stopped"
 
@@ -31,6 +33,7 @@ class Session:
         state: Current session state (active, stopped)
         metadata: Optional session metadata (e.g., SSH host, user)
     """
+
     session_id: str
     session_type: SessionType
     log_file: str
@@ -48,5 +51,5 @@ class Session:
             "file_position": self.file_position,
             "start_time": self.start_time.isoformat(),
             "state": self.state.value,
-            "metadata": self.metadata or {}
+            "metadata": self.metadata or {},
         }

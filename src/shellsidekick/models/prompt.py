@@ -7,6 +7,7 @@ from enum import Enum
 
 class PromptType(str, Enum):
     """Type of detected prompt."""
+
     PASSWORD = "password"
     YES_NO = "yes_no"
     CHOICE = "choice"
@@ -29,6 +30,7 @@ class PromptDetection:
         timestamp: When prompt was detected (ISO 8601)
         is_dangerous: Whether prompt involves dangerous operations
     """
+
     prompt_text: str
     confidence: float
     prompt_type: PromptType
@@ -46,5 +48,5 @@ class PromptDetection:
             "matched_pattern": self.matched_pattern,
             "file_position": self.file_position,
             "timestamp": self.timestamp.isoformat(),
-            "is_dangerous": self.is_dangerous
+            "is_dangerous": self.is_dangerous,
         }

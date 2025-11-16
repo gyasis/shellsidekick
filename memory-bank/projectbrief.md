@@ -52,7 +52,10 @@ ShellSidekick provides AI assistants with the ability to "pair program" during t
 
 ## Project Status
 
-**Phase 5 Complete**: Pattern Learning System
-**Implementation Level**: Production-ready MVP
-**Test Coverage**: >80% for core modules
-**MCP Tools**: 7 tools implemented (3 session management, 2 detection, 2 pattern learning)
+**Phase 1 Complete**: Production-Ready MVP (v0.1.0)
+**Current Phase**: Phase 2 Planning - Intelligent Event Detection & Smart Catch-Up
+**Implementation Level**: Production-ready (Phase 1), Planning (Phase 2)
+**Test Coverage**: 89% (176 passing tests, 19 skipped MCP contract tests)
+**MCP Tools**: 11 tools implemented (Phase 1: session, detection, pattern learning, history)
+**Last Milestone**: All Phase 1 user stories complete, Phase 2 PRD created
+**Next Milestone**: Phase 2A - Foundation (Event model + multi-event detection)
